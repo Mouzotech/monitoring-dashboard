@@ -9,15 +9,18 @@ import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-      exclude: ['/api*'],
-    }),
+    // API modules first (order matters in Fastify)
     ConfigModule,
+    HealthModule,
     DockerModule,
     GrafanaModule,
     MetricsModule,
-    HealthModule,
+    // Static files last
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/',
+      exclude: ['/api/(.*)'],
+    }),
   ],
 })
 export class AppModule {}
