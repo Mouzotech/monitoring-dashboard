@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main, dev ]
+  workflow_dispatch:
+
+jobs:
+  deploy-dev:
+    runs-on: self-hosted
+    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Build Docker image
+      run: |
+        docker build -t monitoring-dashboard:latest .
+    
+    - name: Deploy to caliban
+      run: |
+        # Stop and remove existing container
+        docker stop monitoring-dashboard || true
+        docker rm monitoring-dashboard || true
+        
+        # Run new container
+        docker run -d \
+          --name monitoring-dashboard \
+          --restart unless-stopped \
+          -p 3001:3000 \
+          -e NODE_ENV=production \
+          -e PORT=3000 \
+          -e DOCKER_SOCKET=/var/run/docker.sock \
+          -e GRAFANA_URL=http://grafana:3000 \
+          -e VICTORIA_METRICS_URL=http://victoriametrics:8428 \
+          -v /var/run/docker.sock:/var/run/docker.sock:ro \
+          --network traefik-public \
+          --label "traefik.enable=true" \
+          --label "traefik.http.routers.monitoring.rule=Host(\`monitoring.raspivan.com.es\`)" \
+          --label "traefik.http.routers.monitoring.entrypoints=web" \
+          --label "traefik.http.services.monitoring.loadbalancer.server.port=3000" \
+          monitoring-dashboard:latest
+        
+        # Wait and verify
+        sleep 5
+        curl -s -o /dev/null -w "%{http_code}" http://localhost:3001 || exit 1
+    
+    - name: Verify deployment
+      run: |
+        echo "✅ Deployment successful!"
+        docker ps | grep monitoring-dashboard

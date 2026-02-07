@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  monitoring-dashboard:
+    build: .
+    container_name: monitoring-dashboard
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DOCKER_SOCKET=/var/run/docker.sock
+      - GRAFANA_URL=http://grafana:3000
+      - VICTORIA_METRICS_URL=http://victoriametrics:8428
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik-public
+      - monitoring
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.monitoring.rule=Host(`monitoring.raspivan.com.es`)"
+      - "traefik.http.routers.monitoring.entrypoints=web"
+      - "traefik.http.services.monitoring.loadbalancer.server.port=3000"
+
+networks:
+  traefik-public:
+    external: true
+  monitoring:
+    external: true
