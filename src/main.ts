@@ -9,6 +9,9 @@ async function bootstrap() {
     new FastifyAdapter(),
   );
 
+  // Set global prefix for all API routes
+  app.setGlobalPrefix('api');
+
   app.enableCors({
     origin: true,
     credentials: true,

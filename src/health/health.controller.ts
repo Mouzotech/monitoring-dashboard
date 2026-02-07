@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { HealthCheckService, HealthCheck } from '@nestjs/terminus';
 
 @ApiTags('Health')
-@Controller('api/health')
+@Controller('health')
 export class HealthController {
   constructor(private health: HealthCheckService) {}
 
