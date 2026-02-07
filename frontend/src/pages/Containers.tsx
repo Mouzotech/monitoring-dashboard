@@ -150,7 +150,7 @@ function Containers() {
 
 function ContainerDetails({ container, onClose }: { container: ContainerData; onClose: () => void }) {
   const [stats, setStats] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchStats = async () => {

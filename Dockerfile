@@ -1,42 +1,20 @@
-# Multi-stage Dockerfile para Monitoring Dashboard
+# Dockerfile simplificado - solo backend API
+FROM node:20-alpine
 
-# Stage 1: Build Frontend
-FROM node:20-alpine AS frontend-builder
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm install --legacy-peer-deps
-COPY frontend/ .
-RUN npm run build
-
-# Stage 2: Build Backend
-FROM node:20-alpine AS backend-builder
-WORKDIR /app/backend
-COPY backend/package*.json ./
-RUN npm install --legacy-peer-deps
-COPY backend/ .
-RUN npm run build
-
-# Stage 3: Production
-FROM node:20-alpine AS production
 WORKDIR /app
 
-# Instalar dependencias de producción para backend
-COPY backend/package*.json ./
-RUN npm install --legacy-peer-deps --omit=dev
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
 
-# Copiar backend compilado
-COPY --from=backend-builder /app/backend/dist ./dist
+COPY . .
+RUN npm run build
 
-# Copiar frontend compilado (para servirlo estáticamente)
-COPY --from=frontend-builder /app/frontend/dist ./public
-
-# Instalar dockerode (necesita estar en producción)
-RUN npm install dockerode
-
-# Variables de entorno
 ENV NODE_ENV=production
 ENV PORT=3000
 
 EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
 CMD ["node", "dist/main.js"]

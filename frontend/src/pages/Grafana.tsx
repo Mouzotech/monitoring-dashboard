@@ -19,7 +19,7 @@ function Grafana() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [dbs, health] = await Promise.all([
+        const [dbs] = await Promise.all([
           api.getDashboards(),
           api.queryPrometheus('up').catch(() => null),
         ])
