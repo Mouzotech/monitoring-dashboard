@@ -53,32 +53,20 @@ monitoring-dashboard/
 | `GET /api/metrics/overview` | Overview completo |
 | `GET /api/metrics/services` | Estado de todos los servicios |
 
-## ⚠️ Problema: Acceso Público
+## ✅ Acceso Público Configurado
 
-El servicio está accesible **solo localmente** en caliban (`localhost:3001`).
+**URL:** http://monitoring.raspivan.com.es
 
-### Causa
-Traefik no detecta el contenedor a pesar de tener las labels correctas. Los logs de Traefik muestran errores de configuración (faltan entrypoints y certificados).
+**Arquitectura:**
+```
+Internet → Cloudflare Tunnel → Traefik (puerto 80) → Nginx → Monitoring Dashboard
+```
 
-### Soluciones Propuestas
+La configuración usa nginx como reverse proxy porque Traefik no detectaba directamente el contenedor del dashboard (posiblemente por incompatibilidad con el healthcheck).
 
-#### Opción 1: Cloudflare Tunnel (Recomendada)
-Agregar ruta al túnel existente desde el dashboard de Cloudflare:
-
-1. Ir a https://dash.cloudflare.com
-2. Zero Trust → Networks → Tunnels
-3. Seleccionar el túnel `caliban` (o el nombre que tengas)
-4. Agregar public host name:
-   - Subdominio: `monitoring`
-   - Dominio: `raspivan.com.es`
-   - Type: HTTP
-   - URL: `monitoring-dashboard:3000`
-
-#### Opción 2: Arreglar Traefik
-Investigar y corregir la configuración de Traefik para que detecte nuevos contenedores.
-
-#### Opción 3: Nginx Reverse Proxy
-Configurar nginx como reverse proxy temporal.
+**Archivos de configuración en caliban:**
+- `/home/caliban/monitoring-dashboard/` - Contenedor principal
+- `/home/caliban/nginx-monitor/` - Reverse proxy nginx
 
 ## 🔧 Comandos Útiles
 
